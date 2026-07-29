@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIDEX Intake Assistant — National Visa (Type D)</title>
+<style>
+  :root{
+    --ink:#12233b;          /* deep navy ink */
+    --ink-soft:#42556e;
+    --paper:#f6f4ee;        /* warm document paper */
+    --panel:#ffffff;
+    --line:#d9d3c4;         /* pencil rule */
+    --stamp:#b0392f;        /* consular red stamp */
+    --stamp-soft:#e4c9c5;
+    --seal:#1d4e4a;         /* teal-green seal */
+    --ok:#1d6a4f;
+    --warn:#a6631b;
+    --field-focus:#f2ead6;
+    --shadow:0 1px 2px rgba(18,35,59,.06),0 8px 24px rgba(18,35,59,.06);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:0 20px 120px}
+
+  /* Header / letterhead */
+  header{
+    border-bottom:2px solid var(--ink);
+    padding:34px 0 18px;margin-bottom:8px;
+    position:relative;
+  }
+  .eyebrow{
+    font-family:"Courier New",monospace;font-size:12px;letter-spacing:.28em;
+    text-transform:uppercase;color:var(--stamp);margin:0 0 10px;font-weight:700;
+  }
+  h1{font-size:34px;line-height:1.08;margin:0 0 6px;letter-spacing:-.01em;font-weight:700}
+  .sub{color:var(--ink-soft);font-size:15px;margin:0;max-width:60ch}
+  .contact{margin:4px 0 0;font-size:14px;color:var(--ink-soft);font-family:"Courier New",monospace;letter-spacing:.02em}
+  .contact a{color:var(--seal);text-decoration:none}
+  .contact a:hover{text-decoration:underline}
+  .contact .dot{color:var(--line);margin:0 6px}
+  .seal{
+    position:absolute;top:30px;right:0;width:78px;height:78px;border-radius:50%;
+    border:2px solid var(--seal);color:var(--seal);
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-family:"Courier New",monospace;font-size:9px;letter-spacing:.12em;
+    text-transform:uppercase;transform:rotate(-8deg);opacity:.85;line-height:1.25;
+    padding:6px;
+  }
+  @media(max-width:560px){.seal{display:none}}
+
+  /* Instruction card */
+  .note{
+    background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--stamp);
+    padding:14px 18px;margin:18px 0 6px;font-size:14px;color:var(--ink-soft);
+    box-shadow:var(--shadow);
+  }
+  .note b{color:var(--ink)}
+  .note code{
+    font-family:"Courier New",monospace;background:var(--field-focus);
+    padding:1px 5px;border-radius:3px;font-size:13px;color:var(--ink)
+  }
+
+  /* Toolbar */
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    position:sticky;top:0;z-index:20;background:var(--paper);
+    padding:14px 0 12px;border-bottom:1px solid var(--line);margin-bottom:8px;
+  }
+  .toolbar .grow{flex:1 1 auto}
+  button{
+    font-family:"Courier New",monospace;font-size:12px;letter-spacing:.06em;
+    text-transform:uppercase;cursor:pointer;border:1px solid var(--ink);
+    background:var(--ink);color:#fff;padding:9px 14px;border-radius:2px;
+    transition:transform .08s ease,background .15s ease;
+  }
+  button:hover{transform:translateY(-1px)}
+  button:active{transform:translateY(0)}
+  button.ghost{background:transparent;color:var(--ink)}
+  button.ghost:hover{background:var(--field-focus)}
+  button.stamp{border-color:var(--stamp);background:var(--stamp)}
+  .counter{font-family:"Courier New",monospace;font-size:12px;color:var(--ink-soft)}
+  .counter b{color:var(--ok)}
+
+  /* How-to banner */
+  .howto{
+    display:flex;flex-wrap:wrap;gap:14px;margin:18px 0 2px;
+  }
+  .howto-col{
+    flex:1 1 280px;background:var(--panel);border:1px solid var(--line);
+    border-top:3px solid var(--stamp);padding:13px 16px;box-shadow:var(--shadow);
+  }
+  .howto-col:last-child{border-top-color:var(--seal)}
+  .howto-col p{margin:8px 0 0;font-size:13px;color:var(--ink-soft);line-height:1.5}
+  .howto-col p b{color:var(--ink)}
+  .tag{
+    font-family:"Courier New",monospace;font-size:10px;letter-spacing:.14em;
+    text-transform:uppercase;font-weight:700;padding:3px 8px;border-radius:2px;color:#fff;
+  }
+  .tag-app{background:var(--stamp)}
+  .tag-staff{background:var(--seal)}
+
+  /* Load box */
+  #loadBox{
+    display:none;background:var(--panel);border:1px solid var(--ink);border-radius:3px;
+    box-shadow:var(--shadow);padding:20px;margin-top:8px;
+  }
+  #loadBox h2{margin:0 0 6px;font-size:20px}
+  #loadBox .small{color:var(--ink-soft);font-size:13px;margin:0 0 12px}
+  #loadText{
+    width:100%;min-height:120px;font-family:"Courier New",monospace;font-size:12px;
+    line-height:1.5;background:var(--paper);border:1px solid var(--line);
+    border-radius:2px;padding:12px;color:var(--ink);
+  }
+    background:var(--panel);border:1px solid var(--line);border-radius:3px;
+    margin:16px 0;box-shadow:var(--shadow);overflow:hidden;
+  }
+  summary{
+    cursor:pointer;list-style:none;padding:16px 20px;
+    display:flex;align-items:center;gap:14px;
+    border-bottom:1px solid transparent;
+  }
+  summary::after{
+    content:"▸";margin-left:auto;color:var(--stamp);font-size:15px;
+    transition:transform .18s ease;flex:0 0 auto;
+  }
+  details[open] summary::after{transform:rotate(90deg)}
+  details[open] summary{border-bottom:1px solid var(--line)}
+  summary::-webkit-details-marker{display:none}
+  .snum{
+    font-family:"Courier New",monospace;font-size:13px;color:var(--stamp);
+    font-weight:700;letter-spacing:.1em;min-width:34px;
+  }
+  .stitle{font-size:19px;font-weight:700;flex:1}
+  .sdone{font-family:"Courier New",monospace;font-size:11px;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:.1em}
+  .body{padding:6px 20px 20px}
+
+  /* Fields */
+  .field{padding:14px 0;border-bottom:1px dashed var(--line)}
+  .field:last-child{border-bottom:none}
+  .flabel{
+    display:flex;align-items:baseline;gap:8px;margin-bottom:7px;font-size:15px;
+  }
+  .flabel .req{color:var(--stamp);font-family:"Courier New",monospace;font-size:11px;
+    letter-spacing:.08em;text-transform:uppercase}
+  .flabel .opt{color:var(--ink-soft);font-family:"Courier New",monospace;font-size:11px;
+    letter-spacing:.08em;text-transform:uppercase}
+  .hint{color:var(--ink-soft);font-size:13px;margin:0 0 8px;font-style:italic}
+  .inrow{display:flex;gap:8px;align-items:stretch}
+  input[type=text],select,textarea{
+    flex:1 1 auto;width:100%;font-family:inherit;font-size:15px;color:var(--ink);
+    background:var(--paper);border:1px solid var(--line);border-radius:2px;
+    padding:9px 11px;transition:border .15s,background .15s;
+  }
+  textarea{min-height:64px;resize:vertical;line-height:1.45}
+  input:focus,select:focus,textarea:focus{
+    outline:none;border-color:var(--ink);background:var(--field-focus)
+  }
+  input.bad,textarea.bad{border-color:var(--stamp);background:#fbf2f1}
+  .copybtn{
+    flex:0 0 auto;min-width:84px;font-family:"Courier New",monospace;font-size:11px;
+    background:transparent;color:var(--ink);border:1px solid var(--ink);
+  }
+  .copybtn.done{background:var(--seal);border-color:var(--seal);color:#fff}
+  .msg{font-size:12px;margin:6px 0 0;font-family:"Courier New",monospace;min-height:14px}
+  .msg.err{color:var(--stamp)}
+  .msg.warnmsg{color:var(--warn)}
+
+  /* Review output */
+  #reviewBox{
+    background:var(--panel);border:1px solid var(--ink);border-radius:3px;
+    box-shadow:var(--shadow);padding:20px;margin-top:18px;display:none;
+  }
+  #reviewBox h2{margin:0 0 6px;font-size:20px}
+  #reviewBox p.small{color:var(--ink-soft);font-size:13px;margin:0 0 14px}
+  #reviewText{
+    width:100%;min-height:320px;font-family:"Courier New",monospace;font-size:13px;
+    line-height:1.6;background:var(--paper);border:1px solid var(--line);
+    border-radius:2px;padding:14px;color:var(--ink);
+  }
+  /* Applicant identification bar */
+  .applicant{
+    display:flex;flex-wrap:wrap;gap:14px;margin:18px 0 2px;
+    background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--seal);
+    padding:14px 18px;box-shadow:var(--shadow);
+  }
+  .afield{flex:1 1 180px;display:flex;flex-direction:column;gap:5px}
+  .afield label{
+    font-family:"Courier New",monospace;font-size:11px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--seal);font-weight:700;
+  }
+  .afield input{
+    font-family:inherit;font-size:15px;color:var(--ink);background:var(--paper);
+    border:1px solid var(--line);border-radius:2px;padding:8px 10px;
+  }
+  .afield input:focus{outline:none;border-color:var(--seal);background:var(--field-focus)}
+
+  footer{margin-top:40px;padding-top:16px;border-top:2px solid var(--ink);
+    font-size:12px;color:var(--ink-soft);font-family:"Courier New",monospace;
+    display:flex;flex-direction:column;gap:8px}
+  .fowner{font-size:13px;color:var(--ink);line-height:1.7}
+  .fowner strong{letter-spacing:.04em}
+  .fowner a{color:var(--seal);text-decoration:none}
+  .fowner a:hover{text-decoration:underline}
+  .fnote{font-size:11px;color:var(--ink-soft);max-width:70ch;line-height:1.6}
+  .toast{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(30px);
+    background:var(--ink);color:#fff;padding:11px 20px;border-radius:3px;
+    font-family:"Courier New",monospace;font-size:13px;letter-spacing:.04em;
+    opacity:0;pointer-events:none;transition:all .28s ease;z-index:50;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:560px){
+    .wrap{padding:0 14px 90px}
+    header{padding:22px 0 14px}
+    h1{font-size:26px}
+    .contact{font-size:12px}
+    .contact .dot{margin:0 3px}
+    .howto{gap:10px;margin:14px 0 2px}
+    .howto-col{flex:1 1 100%;padding:10px 13px}
+    .howto-col p{font-size:12px;margin-top:6px}
+    .applicant{gap:8px;padding:11px 13px}
+    .afield{flex:1 1 140px}
+    #app_name{}
+    .afield:first-child{flex:1 1 100%}
+    .toolbar{gap:8px;padding:12px 0 10px}
+    .toolbar button{flex:1 1 auto;padding:11px 10px;font-size:11px}
+    .counter{width:100%;text-align:left}
+    summary{padding:15px 14px;gap:10px}
+    .stitle{font-size:16px;line-height:1.25}
+    .snum{min-width:26px;font-size:12px}
+    .sdone{display:none}
+    .body{padding:4px 14px 16px}
+    .inrow{flex-direction:column}
+    .copybtn{min-width:0;width:100%;padding:11px}
+    input[type=text],select,textarea{font-size:16px}
+  }
+  @media print{.toolbar,.copybtn,button{display:none}details{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <p class="eyebrow">VisionEuro BD · Applicant Intake</p>
+    <h1>VIDEX Intake Assistant</h1>
+    <p class="contact">
+      <a href="https://www.visioneurobd.com">www.visioneurobd.com</a>
+      <span class="dot">·</span> contact@visioneurobd.com
+      <span class="dot">·</span> +49&nbsp;152&nbsp;53449952
+    </p>
+  </header>
+
+  <div class="howto">
+    <div class="howto-col">
+      <span class="tag tag-app">Applicant</span>
+      <p>Fill in your answers. Your work saves automatically in this browser. When done, press <b>Save &amp; share</b>, then press <b>Copy code</b>. Send that code to VisionEuro BD by WhatsApp, email, or Telegram.</p>
+    </div>
+    <div class="howto-col">
+      <span class="tag tag-staff">VisionEuro BD staff</span>
+      <p>Press <b>Load shared code</b>, paste the applicant's code, and every field fills in with a <b>Copy</b> button. Copy each one into the official form at videx.diplo.de.</p>
+    </div>
+  </div>
+
+  <div class="applicant">
+    <div class="afield">
+      <label for="app_name">Applicant name</label>
+      <input type="text" id="app_name" autocomplete="off" placeholder="Full name, as on passport">
+    </div>
+    <div class="afield">
+      <label for="app_ref">Reference / corridor</label>
+      <input type="text" id="app_ref" autocomplete="off" placeholder="e.g. VEB-2026-014 · BD→DE">
+    </div>
+    <div class="afield">
+      <label for="app_date">Intake date</label>
+      <input type="text" id="app_date" autocomplete="off" placeholder="dd.mm.yyyy">
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="stamp" onclick="saveShare()">Save &amp; share</button>
+    <button class="ghost" onclick="openLoad()">Load shared code</button>
+    <button class="ghost" onclick="buildReview()">Build review sheet</button>
+    <button class="ghost" onclick="expandAll(true)">Open all</button>
+    <button class="ghost" onclick="expandAll(false)">Collapse all</button>
+    <button class="ghost" onclick="clearAll()">Clear form</button>
+    <span class="grow"></span>
+    <span class="counter" id="saveState">Not saved yet</span>
+    <span class="counter">Filled <b id="fillCount">0</b> / <span id="fillTotal">0</span></span>
+  </div>
+
+  <div id="loadBox">
+    <h2>Load a shared code</h2>
+    <p class="small">Paste the code the applicant sent you, then press Load. Every field will fill in, ready to copy into VIDEX.</p>
+    <textarea id="loadText" spellcheck="false" placeholder="Paste the VEB code here…"></textarea>
+    <div id="loadBtns" style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="stamp" onclick="doLoad()">Load into form</button>
+      <button class="ghost" onclick="closeLoad()">Cancel</button>
+    </div>
+    <div id="shareBtns" style="margin-top:12px;display:none;gap:10px;flex-wrap:wrap">
+      <button class="stamp" onclick="copyShareCode()">Copy code</button>
+      <button class="ghost" onclick="closeLoad()">Done</button>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+
+  <div id="reviewBox">
+    <h2>Review sheet</h2>
+    <p class="small">A clean label:value list of everything captured. Fix anything flagged above, rebuild, then copy field-by-field into VIDEX. This block is for your records, not for pasting into a single VIDEX box.</p>
+    <textarea id="reviewText" spellcheck="false"></textarea>
+    <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+      <button class="stamp" onclick="copyReview()">Copy review sheet</button>
+      <button class="ghost" onclick="window.print()">Print / save PDF</button>
+    </div>
+  </div>
+
+  <footer>
+    <div class="fowner">
+      <strong>VisionEuro BD</strong> — sole property. Internal intake tool.
+    </div>
+    <div class="fnote">Not affiliated with the German Federal Foreign Office. Field set cross-checked against the live VIDEX long-stay form; verify dropdown values on site.</div>
+  </footer>
+</div>
+<div class="toast" id="toast">Copied</div>
+
+<script>
+/* ---------- VIDEX national-visa field schema ---------- */
+const SCHEMA = [
+  { s:"Personal Details", fields:[
+    ["family_name","Family name","text",true,""],
+    ["birth_name","Name at birth / former family name(s)","text",false,"Leave blank if unchanged"],
+    ["first_names","First name(s)","text",true,""],
+    ["dob","Date of birth","date",true,"Format dd.mm.yyyy"],
+    ["pob","Place of birth","text",true,""],
+    ["country_birth","Country of birth","select:Bangladesh|India|Pakistan|Nepal|Sri Lanka|Qatar|United Arab Emirates|Saudi Arabia|Other",true,"On VIDEX this is a dropdown — pick / verify exact name"],
+    ["sex","Sex","select:Male|Female|Diverse",true,""],
+    ["marital","Marital status","select:Single|Married|Registered partnership|Separated|Divorced|Widowed|Unknown",true,""],
+    ["nationality","Current nationality","select:Bangladeshi|Indian|Pakistani|Nepalese|Sri Lankan|Qatari|Emirati|Saudi|Other",true,"VIDEX dropdown — verify exact name; click Add on the site"],
+    ["former_nationality","Former nationality","text",false,"If applicable; click Add on the site"],
+    ["has_children","Do you have children?","select:No|Yes",true,"Include children over 18 or not travelling with the applicant"],
+    ["children_details","Children — names & dates of birth","textarea",false,"One per line, e.g. Sadia Rahman — 12.03.2015"],
+  ]},
+  { s:"Personal Details — Parents of the applicant", fields:[
+    ["father_family","Family name of father","text",true,""],
+    ["father_first","First name(s) of father","text",true,""],
+    ["father_nationality","Nationality of father","text",false,"VIDEX dropdown"],
+    ["father_dob","Father's date of birth","date",true,"dd.mm.yyyy"],
+    ["father_pob","Father's place of birth","text",true,""],
+    ["father_residence","Father's place of residence","text",true,""],
+    ["mother_family","Family name of mother","text",true,""],
+    ["mother_first","First name(s) of mother","text",true,""],
+    ["mother_nationality","Nationality of mother","text",false,"VIDEX dropdown"],
+    ["mother_dob","Mother's date of birth","date",true,"dd.mm.yyyy"],
+    ["mother_pob","Mother's place of birth","text",true,""],
+    ["mother_residence","Mother's place of residence","text",true,""],
+  ]},
+  { s:"Personal Details — Occupation", fields:[
+    ["occupation_learned","Occupation learned","select:Electrician|Welder|Plumber|Mason|Carpenter|Care assistant / Nurse|Cook / Chef|Driver|IT specialist|Mechanic|Other",true,"VIDEX dropdown — verify exact list on site"],
+    ["occupation_further","Further information where applicable","text",false,""],
+    ["occupation_current","Current occupation (if different)","text",false,""],
+  ]},
+  { s:"Contact data", fields:[
+    ["addr_street","Street","text",true,""],
+    ["addr_house","House number","text",true,""],
+    ["addr_other","Other address information","text",false,"Apartment, building, etc."],
+    ["addr_postal","Postal code","text",true,""],
+    ["addr_city","Town / city","text",true,""],
+    ["addr_country","Country","select:Bangladesh|India|Pakistan|Nepal|Sri Lanka|Qatar|United Arab Emirates|Saudi Arabia|Other",true,"VIDEX dropdown"],
+    ["phone","Telephone / mobile number","text",true,"Include country code, e.g. +880…"],
+    ["email","Email","email",false,"e.g. name@mail.com"],
+    ["residence_other","Is your residence in a country other than that of your current nationality?","select:No|Yes",false,"e.g. a Bangladeshi living in Qatar → Yes"],
+  ]},
+  { s:"Identification papers", fields:[
+    ["doc_type","Type of travel document","select:Ordinary passport|Diplomatic passport|Service passport|Official passport|Special passport|Travel document (1951 Convention)|Alien's passport|Other travel document",true,""],
+    ["doc_number","Travel document number","text",true,""],
+    ["doc_issue","Date of issue","date",true,"dd.mm.yyyy — issued (not extended) within last 10 years"],
+    ["doc_issuing_state","Issuing state","select:Bangladesh|India|Pakistan|Nepal|Sri Lanka|Qatar|United Arab Emirates|Saudi Arabia|Other",true,"VIDEX dropdown"],
+    ["doc_expiry","Valid until","date",true,"dd.mm.yyyy — valid ≥3 months after planned trip"],
+    ["doc_issued_by","Issued by","text",true,"e.g. Dept. of Immigration & Passports"],
+    ["doc_issued_in","Issued in (place)","text",false,""],
+  ]},
+  { s:"Travel data", fields:[
+    ["purpose","Purpose of stay in Germany","select:Employment / Gainful occupation|Vocational training|Study|Family reunion|Other",true,"For a work visa choose Employment"],
+    ["intended_employment","If applicable, intended employment","text",false,"e.g. Skilled worker — electrician with [employer]"],
+    ["stay_from","Intended length of stay — From","date",true,"dd.mm.yyyy"],
+    ["under_12m","Intend to stay no longer than 12 months (visa covers whole stay)?","select:No|Yes",false,"Tick Yes on the site if true"],
+    ["stay_to","Intended length of stay — To","date",true,"dd.mm.yyyy"],
+  ]},
+  { s:"Reference", fields:[
+    ["ref_type","Type of reference","select:Reference person|Company / organisation|None",false,"Employer contact or inviting person"],
+    ["ref_relationship","Family relationship","text",false,"Leave blank / N/A if employer, not family"],
+    ["ref_family","Family name of contact person","text",false,""],
+    ["ref_first","First name(s) of contact person","text",false,""],
+    ["ref_sex","Sex","select:Male|Female|Diverse",false,""],
+    ["ref_dob","Date of birth","date",false,"dd.mm.yyyy"],
+    ["ref_pob","Place of birth","text",false,""],
+    ["ref_nationality","Nationality","text",false,"VIDEX dropdown"],
+    ["ref_street","Street","text",false,""],
+    ["ref_house","House number","text",false,""],
+    ["ref_postal","Postal code","text",false,""],
+    ["ref_city","Town / city","text",false,""],
+    ["ref_country","Country","text",false,"Pre-filled Germany on the site"],
+    ["ref_phone","Telephone / mobile number","text",false,""],
+    ["ref_email","Email","email",false,""],
+    ["ref_alt_surname","Alternative spelling — surname(s)","text",false,""],
+    ["ref_alt_first","Alternative spelling — first name(s)","text",false,""],
+    ["ref_other_names","Other names","text",false,""],
+    ["ref_prev_names","Previous names","text",false,""],
+  ]},
+  { s:"Means of support and details regarding the stay", fields:[
+    ["means","What are your means of support in Germany?","textarea",true,"e.g. Employment contract / monthly salary from [employer]; accommodation provided"],
+    ["declaration","Has a formal declaration of commitment been completed?","select:No|Yes, by the reference|Yes, by a different sponsor",true,""],
+  ]},
+  { s:"Intended place of stay in Germany", fields:[
+    ["stay_street","Street (if known)","text",false,""],
+    ["stay_house","House number (if known)","text",false,""],
+    ["stay_postal","Postal code","text",true,""],
+    ["stay_city","Town / city","text",true,""],
+    ["accommodation","How will you be accommodated?","select:Single room|Apartment|Collective accommodation|Other",false,""],
+    ["accommodation_rooms","With rooms (number)","text",false,"If a single room / apartment with a room count"],
+    ["accommodation_other","Other accommodation — explain","text",false,"Only if 'Other' selected"],
+  ]},
+];
+
+/* ---------- Build the UI ---------- */
+const allow = "A-Za-zÄÖÜäöüß0-9 .+\\-,'@/()";
+const latinRe = new RegExp("^["+allow+"]*$");
+const dateRe = /^(0[1-9]|[12]\d|3[01])\.(0[1-9]|1[0-2])\.\d{4}$/;
+const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+let totalFields = 0;
+const container = document.getElementById("sections");
+let isNarrow = false;
+try { isNarrow = window.matchMedia && window.matchMedia("(max-width:560px)").matches; } catch(e){ isNarrow = (screen && screen.width<=560); }
+
+try {
+SCHEMA.forEach((sec,si)=>{
+  const d = document.createElement("details");
+  if(si===0 || isNarrow) d.open = true;
+  const num = String(si+1).padStart(2,"0");
+  d.innerHTML = `<summary><span class="snum">${num}</span><span class="stitle">${sec.s}</span><span class="sdone" id="done-${si}"></span></summary><div class="body" id="body-${si}"></div>`;
+  container.appendChild(d);
+  const body = d.querySelector(".body");
+
+  sec.fields.forEach(f=>{
+    totalFields++;
+    const [id,label,type,req,hint] = f;
+    const wrap = document.createElement("div");
+    wrap.className = "field";
+    let control = "";
+    if(type.startsWith("select:")){
+      const opts = type.slice(7).split("|").map(o=>`<option value="${o}">${o}</option>`).join("");
+      control = `<select id="in-${id}" data-id="${id}" data-type="select"><option value="">— select —</option>${opts}</select>`;
+    } else if(type==="textarea"){
+      control = `<textarea id="in-${id}" data-id="${id}" data-type="textarea" spellcheck="false"></textarea>`;
+    } else {
+      control = `<input type="text" id="in-${id}" data-id="${id}" data-type="${type}" autocomplete="off">`;
+    }
+    wrap.innerHTML = `
+      <div class="flabel"><span>${label}</span>${req?'<span class="req">Required</span>':'<span class="opt">Optional</span>'}</div>
+      ${hint?`<p class="hint">${hint}</p>`:''}
+      <div class="inrow">${control}<button class="copybtn" data-copy="${id}">Copy</button></div>
+      <p class="msg" id="msg-${id}"></p>`;
+    body.appendChild(wrap);
+  });
+});
+} catch(err){
+  container.innerHTML = '<div style="background:#fbf2f1;border:1px solid #b0392f;padding:16px;color:#12233b;font-family:monospace;font-size:13px;border-radius:3px">Form failed to load on this device.<br><br>Error: '+(err && err.message ? err.message : err)+'<br><br>Please screenshot this and send it to VisionEuro BD.</div>';
+}
+document.getElementById("fillTotal").textContent = totalFields;
+
+/* ---------- Validation ---------- */
+function validate(el){
+  const id = el.dataset.id, type = el.dataset.type;
+  const msg = document.getElementById("msg-"+id);
+  let v = el.value;
+  el.classList.remove("bad"); msg.textContent=""; msg.className="msg";
+
+  // auto-normalise dd/mm/yyyy or dd-mm-yyyy -> dd.mm.yyyy
+  if(type==="date" && v){
+    v = v.replace(/[\/\-\s]/g,".");
+    el.value = v;
+  }
+  if(!v){ return; }
+
+  if(type!=="select" && !latinRe.test(v)){
+    el.classList.add("bad");
+    msg.textContent="Non-Latin / disallowed character — VIDEX won't accept it";
+    msg.className="msg err"; return;
+  }
+  if(type==="date" && !dateRe.test(v)){
+    el.classList.add("bad");
+    msg.textContent="Use dd.mm.yyyy (e.g. 05.08.1990)";
+    msg.className="msg err"; return;
+  }
+  if(type==="email" && !emailRe.test(v)){
+    el.classList.add("bad");
+    msg.textContent="Enter a valid email (name@mail.com)";
+    msg.className="msg err"; return;
+  }
+  msg.textContent="Looks good";
+  msg.className="msg warnmsg";
+  msg.style.color="var(--ok)";
+}
+
+/* ---------- Events ---------- */
+container.addEventListener("input",e=>{
+  if(e.target.dataset.id){ validate(e.target); updateCounts(); autosave(); }
+});
+document.addEventListener("input",e=>{
+  if(["app_name","app_ref","app_date"].includes(e.target.id)) autosave();
+});
+container.addEventListener("click",e=>{
+  const id = e.target.dataset && e.target.dataset.copy;
+  if(!id) return;
+  const el = document.getElementById("in-"+id);
+  let v = el.value.trim();
+  // For required-but-empty fields, offer N/A per VIDEX guidance
+  if(!v){
+    const isReq = findReq(id);
+    v = isReq ? "N/A" : "";
+    if(!v){ toast("Field is empty"); return; }
+  }
+  copyText(v);
+  e.target.textContent="Copied ✓";
+  e.target.classList.add("done");
+  setTimeout(()=>{e.target.textContent="Copy";e.target.classList.remove("done")},1400);
+});
+
+function findReq(id){
+  for(const sec of SCHEMA) for(const f of sec.fields) if(f[0]===id) return f[3];
+  return false;
+}
+
+/* ---------- Counts ---------- */
+function updateCounts(){
+  let filled=0;
+  document.querySelectorAll("[data-id]").forEach(el=>{ if(el.value.trim()) filled++; });
+  document.getElementById("fillCount").textContent = filled;
+  SCHEMA.forEach((sec,si)=>{
+    let f=0,t=sec.fields.length;
+    sec.fields.forEach(fl=>{ const el=document.getElementById("in-"+fl[0]); if(el.value.trim()) f++; });
+    document.getElementById("done-"+si).textContent = f+" / "+t;
+  });
+}
+
+/* ---------- Save, share & load ---------- */
+const STORE_KEY = "veb_videx_intake_v1";
+const CODE_PREFIX = "VEB1:";
+
+function collect(){
+  const data={meta:{},fields:{}};
+  ["app_name","app_ref","app_date"].forEach(id=>{
+    const e=document.getElementById(id); if(e && e.value.trim()) data.meta[id]=e.value.trim();
+  });
+  document.querySelectorAll("[data-id]").forEach(el=>{
+    if(el.value.trim()) data.fields[el.dataset.id]=el.value.trim();
+  });
+  return data;
+}
+
+function apply(data){
+  if(data.meta){
+    ["app_name","app_ref","app_date"].forEach(id=>{
+      const e=document.getElementById(id); if(e) e.value=data.meta[id]||"";
+    });
+  }
+  if(data.fields){
+    Object.keys(data.fields).forEach(id=>{
+      const el=document.getElementById("in-"+id);
+      if(el){ el.value=data.fields[id]; validate(el); }
+    });
+  }
+  updateCounts();
+}
+
+/* Base64 that survives unicode */
+function encodeData(obj){
+  const json=JSON.stringify(obj);
+  return CODE_PREFIX + btoa(unescape(encodeURIComponent(json)));
+}
+function decodeData(code){
+  let c=code.trim();
+  const i=c.indexOf(CODE_PREFIX);
+  if(i>=0) c=c.slice(i+CODE_PREFIX.length);
+  c=c.replace(/\s+/g,"");
+  const json=decodeURIComponent(escape(atob(c)));
+  return JSON.parse(json);
+}
+
+function autosave(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(collect()));
+    const s=document.getElementById("saveState");
+    const t=new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    s.innerHTML="Saved "+t;
+  }catch(e){/* private mode: ignore */}
+}
+
+function saveShare(){
+  const data=collect();
+  if(Object.keys(data.fields).length===0){ toast("Nothing to save yet"); return; }
+  const code=encodeData(data);
+  autosave();
+  const nm=data.meta.app_name?(" for "+data.meta.app_name):"";
+  // show the code and a Copy button — applicant copies it themselves
+  const lb=document.getElementById("loadBox");
+  document.getElementById("loadText").value=code;
+  lb.style.display="block";
+  document.getElementById("loadBtns").style.display="none";
+  document.getElementById("shareBtns").style.display="flex";
+  lb.querySelector("h2").textContent="Your share code"+nm;
+  lb.querySelector(".small").textContent="Your answers are ready. Press Copy code below, then paste it into WhatsApp, email, or Telegram and send it to VisionEuro BD.";
+  lb.scrollIntoView({behavior:"smooth"});
+}
+
+function copyShareCode(){
+  const code=document.getElementById("loadText").value.trim();
+  if(!code){ toast("No code to copy"); return; }
+  copyText(code);
+}
+
+function openLoad(){
+  const lb=document.getElementById("loadBox");
+  lb.style.display="block";
+  document.getElementById("loadBtns").style.display="flex";
+  document.getElementById("shareBtns").style.display="none";
+  lb.querySelector("h2").textContent="Load a shared code";
+  lb.querySelector(".small").textContent="Paste the code the applicant sent you, then press Load. Every field will fill in, ready to copy into VIDEX.";
+  document.getElementById("loadText").value="";
+  lb.scrollIntoView({behavior:"smooth"});
+  document.getElementById("loadText").focus();
+}
+function closeLoad(){ document.getElementById("loadBox").style.display="none"; }
+
+function doLoad(){
+  const raw=document.getElementById("loadText").value;
+  if(!raw.trim()){ toast("Paste a code first"); return; }
+  let data;
+  try{ data=decodeData(raw); }
+  catch(e){ toast("That code could not be read — check it was copied fully"); return; }
+  apply(data);
+  autosave();
+  closeLoad();
+  toast("Loaded — fields are ready to copy");
+  expandAll(true);
+}
+
+/* Restore autosaved draft on open */
+(function restore(){
+  try{
+    const saved=localStorage.getItem(STORE_KEY);
+    if(saved){ apply(JSON.parse(saved)); }
+  }catch(e){/* ignore */}
+})();
+
+/* ---------- Utilities ---------- */
+function copyText(t){
+  navigator.clipboard.writeText(t).then(()=>toast("Copied"))
+  .catch(()=>{ const ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();toast("Copied"); });
+}
+let toastTimer;
+function toast(m){
+  const t=document.getElementById("toast");t.textContent=m;t.classList.add("show");
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),1400);
+}
+function expandAll(open){document.querySelectorAll("details").forEach(d=>d.open=open);}
+function clearAll(){
+  if(!confirm("Clear all fields for this applicant?"))return;
+  document.querySelectorAll("[data-id]").forEach(el=>{el.value="";el.classList.remove("bad");});
+  ["app_name","app_ref","app_date"].forEach(id=>{const e=document.getElementById(id);if(e)e.value="";});
+  document.querySelectorAll(".msg").forEach(m=>{m.textContent="";m.className="msg";});
+  document.getElementById("reviewBox").style.display="none";
+  document.getElementById("loadBox").style.display="none";
+  try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  document.getElementById("saveState").textContent="Not saved yet";
+  updateCounts();
+}
+
+/* ---------- Review sheet ---------- */
+function buildReview(){
+  let out=[], issues=0;
+  SCHEMA.forEach(sec=>{
+    out.push("═══ "+sec.s.toUpperCase()+" ═══");
+    sec.fields.forEach(f=>{
+      const [id,label,type,req]=f;
+      const el=document.getElementById("in-"+id);
+      let v=el.value.trim();
+      if(el.classList.contains("bad")) issues++;
+      if(!v && req) v="N/A";
+      if(v) out.push(label+": "+v);
+    });
+    out.push("");
+  });
+  const box=document.getElementById("reviewBox");
+  const nm=(document.getElementById("app_name").value||"").trim();
+  const rf=(document.getElementById("app_ref").value||"").trim();
+  const dt=(document.getElementById("app_date").value||"").trim();
+  let tag="VISIONEURO BD — VIDEX INTAKE SHEET\n";
+  if(nm) tag+="Applicant: "+nm+"\n";
+  if(rf) tag+="Reference / corridor: "+rf+"\n";
+  if(dt) tag+="Intake date: "+dt+"\n";
+  tag+="────────────────────────────\n\n";
+  const head = issues>0 ? "⚠ "+issues+" field(s) flagged above — fix before submitting.\n\n" : "";
+  document.getElementById("reviewText").value = tag+head+out.join("\n").trim();
+  box.style.display="block";
+  box.scrollIntoView({behavior:"smooth"});
+}
+function copyReview(){copyText(document.getElementById("reviewText").value);}
+
+updateCounts();
+</script>
+</body>
+</html>
