@@ -341,6 +341,14 @@ const SCHEMA = [
     ["country_birth","Country of birth","select:Bangladesh|India|Pakistan|Nepal|Sri Lanka|Qatar|United Arab Emirates|Saudi Arabia|Other",true,"On VIDEX this is a dropdown — pick / verify exact name"],
     ["sex","Sex","select:Male|Female|Diverse",true,""],
     ["marital","Marital status","select:Single|Married|Registered partnership|Separated|Divorced|Widowed|Unknown",true,""],
+    ["marital_since","Married / partnered since","date",true,"dd.mm.yyyy — shown because you selected married/partnership",{field:"marital",values:["Married","Registered partnership"]}],
+    ["spouse_family","Spouse / partner — Family name","text",true,"",{field:"marital",values:["Married","Registered partnership"]}],
+    ["spouse_birthname","Spouse / partner — Name at birth / former family name(s)","text",false,"",{field:"marital",values:["Married","Registered partnership"]}],
+    ["spouse_first","Spouse / partner — First name(s)","text",true,"",{field:"marital",values:["Married","Registered partnership"]}],
+    ["spouse_dob","Spouse / partner — Date of birth","date",true,"dd.mm.yyyy",{field:"marital",values:["Married","Registered partnership"]}],
+    ["spouse_pob","Spouse / partner — Place of birth","text",true,"",{field:"marital",values:["Married","Registered partnership"]}],
+    ["spouse_country_birth","Spouse / partner — Country of birth","select:Bangladesh|India|Pakistan|Nepal|Sri Lanka|Qatar|United Arab Emirates|Saudi Arabia|Other",true,"VIDEX dropdown",{field:"marital",values:["Married","Registered partnership"]}],
+    ["spouse_nationality","Spouse / partner — Current nationality","select:Bangladeshi|Indian|Pakistani|Nepalese|Sri Lankan|Qatari|Emirati|Saudi|Other",true,"VIDEX dropdown",{field:"marital",values:["Married","Registered partnership"]}],
     ["nationality","Current nationality","select:Bangladeshi|Indian|Pakistani|Nepalese|Sri Lankan|Qatari|Emirati|Saudi|Other",true,"VIDEX dropdown — verify exact name; click Add on the site"],
     ["former_nationality","Former nationality","text",false,"If applicable; click Add on the site"],
     ["has_children","Do you have children?","select:No|Yes",true,"Include children over 18 or not travelling with the applicant"],
@@ -366,7 +374,7 @@ const SCHEMA = [
     ["occupation_current","Current occupation (if different)","text",false,""],
   ]},
   { s:"Contact data", fields:[
-    ["addr_street","Street","text",true,""],
+    ["addr_street","Street","text",true,"Enter the applicant's CURRENT residential address (where they live now)"],
     ["addr_house","House number","text",true,""],
     ["addr_other","Other address information","text",false,"Apartment, building, etc."],
     ["addr_postal","Postal code","text",true,""],
@@ -375,6 +383,9 @@ const SCHEMA = [
     ["phone","Telephone / mobile number","text",true,"Include country code, e.g. +880…"],
     ["email","Email","email",false,"e.g. name@mail.com"],
     ["residence_other","Is your residence in a country other than that of your current nationality?","select:No|Yes",false,"e.g. a Bangladeshi living in Qatar → Yes"],
+    ["residence_permit_type","Type of residence permit","text",false,"Shown because residence is in another country",{field:"residence_other",values:["Yes"]}],
+    ["residence_permit_number","Residence permit number","text",false,"",{field:"residence_other",values:["Yes"]}],
+    ["residence_permit_valid","Residence permit — Valid until","date",false,"dd.mm.yyyy",{field:"residence_other",values:["Yes"]}],
   ]},
   { s:"Identification papers", fields:[
     ["doc_type","Type of travel document","select:Ordinary passport|Diplomatic passport|Service passport|Official passport|Special passport|Travel document (1951 Convention)|Alien's passport|Other travel document",true,""],
@@ -449,9 +460,15 @@ SCHEMA.forEach((sec,si)=>{
 
   sec.fields.forEach(f=>{
     totalFields++;
-    const [id,label,type,req,hint] = f;
+    const [id,label,type,req,hint,cond] = f;
     const wrap = document.createElement("div");
     wrap.className = "field";
+    wrap.id = "field-"+id;
+    if(cond){
+      wrap.setAttribute("data-cond-field", cond.field);
+      wrap.setAttribute("data-cond-values", cond.values.join("||"));
+      wrap.style.display = "none";
+    }
     let control = "";
     if(type.startsWith("select:")){
       const opts = type.slice(7).split("|").map(o=>`<option value="${o}">${o}</option>`).join("");
@@ -510,7 +527,10 @@ function validate(el){
 
 /* ---------- Events ---------- */
 container.addEventListener("input",e=>{
-  if(e.target.dataset.id){ validate(e.target); updateCounts(); autosave(); }
+  if(e.target.dataset.id){ validate(e.target); applyConditionals(); updateCounts(); autosave(); }
+});
+container.addEventListener("change",e=>{
+  if(e.target.dataset.id){ validate(e.target); applyConditionals(); updateCounts(); autosave(); }
 });
 document.addEventListener("input",e=>{
   if(["app_name","app_ref","app_date"].includes(e.target.id)) autosave();
@@ -538,13 +558,34 @@ function findReq(id){
 }
 
 /* ---------- Counts ---------- */
+/* ---------- Conditional field visibility ---------- */
+function applyConditionals(){
+  document.querySelectorAll("[data-cond-field]").forEach(wrap=>{
+    const cf = wrap.getAttribute("data-cond-field");
+    const vals = wrap.getAttribute("data-cond-values").split("||");
+    const src = document.getElementById("in-"+cf);
+    const show = src && vals.indexOf(src.value)>=0;
+    wrap.style.display = show ? "" : "none";
+    if(!show){
+      // clear hidden field so stale answers aren't shared
+      const inp = wrap.querySelector("[data-id]");
+      if(inp && inp.value){ inp.value=""; const m=wrap.querySelector(".msg"); if(m){m.textContent="";m.className="msg";} inp.classList.remove("bad"); }
+    }
+  });
+}
+
+function isVisible(el){
+  const w = document.getElementById("field-"+el.dataset.id);
+  return !w || w.style.display !== "none";
+}
+
 function updateCounts(){
   let filled=0;
-  document.querySelectorAll("[data-id]").forEach(el=>{ if(el.value.trim()) filled++; });
+  document.querySelectorAll("[data-id]").forEach(el=>{ if(isVisible(el) && el.value.trim()) filled++; });
   document.getElementById("fillCount").textContent = filled;
   SCHEMA.forEach((sec,si)=>{
-    let f=0,t=sec.fields.length;
-    sec.fields.forEach(fl=>{ const el=document.getElementById("in-"+fl[0]); if(el.value.trim()) f++; });
+    let f=0,t=0;
+    sec.fields.forEach(fl=>{ const el=document.getElementById("in-"+fl[0]); if(!el) return; if(!isVisible(el)) return; t++; if(el.value.trim()) f++; });
     document.getElementById("done-"+si).textContent = f+" / "+t;
   });
 }
@@ -559,7 +600,7 @@ function collect(){
     const e=document.getElementById(id); if(e && e.value.trim()) data.meta[id]=e.value.trim();
   });
   document.querySelectorAll("[data-id]").forEach(el=>{
-    if(el.value.trim()) data.fields[el.dataset.id]=el.value.trim();
+    if(isVisible(el) && el.value.trim()) data.fields[el.dataset.id]=el.value.trim();
   });
   return data;
 }
@@ -573,7 +614,14 @@ function apply(data){
   if(data.fields){
     Object.keys(data.fields).forEach(id=>{
       const el=document.getElementById("in-"+id);
-      if(el){ el.value=data.fields[id]; validate(el); }
+      if(el){ el.value=data.fields[id]; }
+    });
+  }
+  applyConditionals();          // reveal spouse/permit blocks if triggered
+  if(data.fields){
+    Object.keys(data.fields).forEach(id=>{
+      const el=document.getElementById("in-"+id);
+      if(el){ validate(el); }   // validate after visibility settled
     });
   }
   updateCounts();
@@ -679,6 +727,7 @@ function clearAll(){
   document.getElementById("loadBox").style.display="none";
   try{ localStorage.removeItem(STORE_KEY); }catch(e){}
   document.getElementById("saveState").textContent="Not saved yet";
+  applyConditionals();
   updateCounts();
 }
 
@@ -690,6 +739,7 @@ function buildReview(){
     sec.fields.forEach(f=>{
       const [id,label,type,req]=f;
       const el=document.getElementById("in-"+id);
+      if(!el || !isVisible(el)) return;   // skip hidden conditional fields
       let v=el.value.trim();
       if(el.classList.contains("bad")) issues++;
       if(!v && req) v="N/A";
@@ -713,6 +763,7 @@ function buildReview(){
 }
 function copyReview(){copyText(document.getElementById("reviewText").value);}
 
+applyConditionals();
 updateCounts();
 </script>
 </body>
